@@ -52,11 +52,11 @@ function loadOps(): Operation[] {
 }
 
 function FinanceSection() {
-  const today = new Date().toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const now = new Date();
+  const monthName = now.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+  // текущие год/месяц в формате дат операций (гг.мм)
+  const curYY = String(now.getFullYear()).slice(2);
+  const curMM = String(now.getMonth() + 1).padStart(2, "0");
 
   const [ops, setOps] = useState<Operation[]>(loadOps);
 
@@ -67,7 +67,9 @@ function FinanceSection() {
 
   // фильтры
   const [filterAccount, setFilterAccount] = useState<"all" | Account>("all");
-  const [filterDate, setFilterDate] = useState("");
+  const [period, setPeriod] = useState<"month" | "year" | "custom">("month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   // форма
   const [fDate, setFDate] = useState("");
@@ -79,10 +81,19 @@ function FinanceSection() {
   const filtered = useMemo(() => {
     return ops.filter((o) => {
       if (filterAccount !== "all" && o.account !== filterAccount) return false;
-      if (filterDate && o.date !== filterDate) return false;
+      if (o.date === "—") return true;
+
+      if (period === "month") {
+        if (!o.date.startsWith(`${curYY}.${curMM}`)) return false;
+      } else if (period === "year") {
+        if (!o.date.startsWith(`${curYY}.`)) return false;
+      } else if (period === "custom") {
+        if (customFrom && o.date < customFrom) return false;
+        if (customTo && o.date > customTo) return false;
+      }
       return true;
     });
-  }, [ops, filterAccount, filterDate]);
+  }, [ops, filterAccount, period, customFrom, customTo, curYY, curMM]);
 
   const cashBalance = ops.filter((o) => o.account === "cash").reduce((s, o) => s + o.amount, 0) + 320000;
   const bankBalance = ops.filter((o) => o.account === "bank").reduce((s, o) => s + o.amount, 0) + 1480000;
@@ -106,7 +117,7 @@ function FinanceSection() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-light text-foreground">Движение денег</h1>
-          <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{today}</p>
+          <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{monthName}</p>
         </div>
         <Button onClick={() => setOpen(true)} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0">
           <Icon name="Plus" size={16} className="mr-1" />
@@ -130,12 +141,10 @@ function FinanceSection() {
       </div>
 
       {/* Колонки-расшифровки */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         {[
           { label: "Доход", value: "1 840 000 ₽", delta: "+12%", up: true },
           { label: "Расходы", value: "940 000 ₽", delta: "−4%", up: false },
-          { label: "Прибыль", value: "900 000 ₽", delta: "+28%", up: true },
-          { label: "ФОТ", value: "420 000 ₽", delta: "0%", up: true },
         ].map((kpi, i) => (
           <div
             key={kpi.label}
@@ -173,20 +182,36 @@ function FinanceSection() {
                 </button>
               ))}
             </div>
-            {/* Фильтр по дате */}
-            <Input
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              placeholder="гг.гг.гг"
-              className="h-8 w-28 text-xs"
-            />
-            {filterDate && (
-              <button onClick={() => setFilterDate("")} className="text-muted-foreground hover:text-foreground">
-                <Icon name="X" size={16} />
-              </button>
-            )}
+            {/* Фильтр по периоду */}
+            <div className="flex bg-muted rounded-lg p-0.5">
+              {([
+                { id: "month", label: "Месяц" },
+                { id: "year", label: "Год" },
+                { id: "custom", label: "Период" },
+              ] as const).map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setPeriod(f.id)}
+                  className={`text-xs font-body px-2.5 py-1 rounded-md transition-colors ${
+                    period === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Произвольный период */}
+        {period === "custom" && (
+          <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in">
+            <span className="text-xs text-muted-foreground font-body">с</span>
+            <Input value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} placeholder="гг.гг.гг" className="h-8 w-28 text-xs" />
+            <span className="text-xs text-muted-foreground font-body">по</span>
+            <Input value={customTo} onChange={(e) => setCustomTo(e.target.value)} placeholder="гг.гг.гг" className="h-8 w-28 text-xs" />
+          </div>
+        )}
 
         <div className="space-y-3">
           {filtered.length === 0 && (
