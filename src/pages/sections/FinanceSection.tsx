@@ -157,6 +157,36 @@ export default function FinanceSection() {
     setOpen(false);
   };
 
+  // Экспорт отфильтрованных операций в Excel (CSV)
+  const handleExport = () => {
+    const header = ["Дата", "Описание", "Тип", "Вид операции", "Сумма, ₽"];
+    const rows = filtered.map((o) => [
+      o.date,
+      o.name,
+      o.amount >= 0 ? "Приход" : "Расход",
+      o.account === "cash" ? "нал." : "по р/сч",
+      String(o.amount),
+    ]);
+    const totalsRows = [
+      [],
+      ["Доход — всего", "", "", "", String(incomeTotal)],
+      ["Расходы — всего", "", "", "", String(expenseTotal)],
+      ["Итого", "", "", "", String(incomeTotal - expenseTotal)],
+    ];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const csv = [header, ...rows, ...totalsRows]
+      .map((r) => r.map((c) => escape(String(c))).join(";"))
+      .join("\n");
+    // BOM для корректной кириллицы в Excel
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dvizhenie-deneg-${period}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Шапка: дата + остатки */}
@@ -244,7 +274,19 @@ export default function FinanceSection() {
       {/* Таблица операций с фильтрами */}
       <div className="bg-card rounded-2xl border border-border p-5">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="font-display text-lg font-medium">Последние операции</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-medium">Последние операции</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={filtered.length === 0}
+              className="h-8 text-xs font-body gap-1.5"
+            >
+              <Icon name="Download" size={14} />
+              Excel
+            </Button>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             {/* Фильтр по виду операции */}
             <div className="flex bg-muted rounded-lg p-0.5">
