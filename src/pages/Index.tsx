@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Icon from "@/components/ui/icon";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 type IconName = string;
+type Account = "cash" | "bank";
+type Operation = {
+  name: string;
+  amount: number;
+  date: string; // гг.гг.гг (например 26.06.11)
+  account: Account;
+};
 type Section = "finance" | "users" | "ads" | "calendar" | "projects" | "chats" | "docs";
 
 const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
@@ -15,6 +26,19 @@ const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
 ];
 
 // ── Движение денег ────────────────────────────────────────────────────────────
+const INITIAL_OPS: Operation[] = [
+  { name: "Поступление — Рекламный контракт", amount: 280000, date: "26.06.10", account: "cash" },
+  { name: "Выплата зарплаты — команда", amount: -140000, date: "26.06.05", account: "bank" },
+  { name: "Поступление — Спецпроект", amount: 120000, date: "26.06.03", account: "bank" },
+  { name: "Производственные расходы", amount: -48000, date: "26.06.01", account: "cash" },
+  { name: "Инвестиции — брокерский счёт", amount: -50000, date: "26.05.28", account: "bank" },
+];
+
+function formatMoney(n: number): string {
+  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
+  return `${sign}${Math.abs(n).toLocaleString("ru-RU")} ₽`;
+}
+
 function FinanceSection() {
   const today = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
@@ -22,26 +46,62 @@ function FinanceSection() {
     year: "numeric",
   });
 
-  const operations = [
-    { name: "Поступление — Рекламный контракт", amount: "+280 000 ₽", date: "10 июн", type: "in", account: "cash" },
-    { name: "Выплата зарплаты — команда", amount: "−140 000 ₽", date: "5 июн", type: "out", account: "bank" },
-    { name: "Поступление — Спецпроект", amount: "+120 000 ₽", date: "3 июн", type: "in", account: "bank" },
-    { name: "Производственные расходы", amount: "−48 000 ₽", date: "1 июн", type: "out", account: "cash" },
-    { name: "Инвестиции — брокерский счёт", amount: "−50 000 ₽", date: "28 май", type: "out", account: "bank" },
-  ];
+  const [ops, setOps] = useState<Operation[]>(INITIAL_OPS);
+  const [open, setOpen] = useState(false);
+
+  // фильтры
+  const [filterAccount, setFilterAccount] = useState<"all" | Account>("all");
+  const [filterDate, setFilterDate] = useState("");
+
+  // форма
+  const [fDate, setFDate] = useState("");
+  const [fName, setFName] = useState("");
+  const [fAmount, setFAmount] = useState("");
+  const [fAccount, setFAccount] = useState<Account>("cash");
+  const [fSign, setFSign] = useState<"in" | "out">("in");
+
+  const filtered = useMemo(() => {
+    return ops.filter((o) => {
+      if (filterAccount !== "all" && o.account !== filterAccount) return false;
+      if (filterDate && o.date !== filterDate) return false;
+      return true;
+    });
+  }, [ops, filterAccount, filterDate]);
+
+  const cashBalance = ops.filter((o) => o.account === "cash").reduce((s, o) => s + o.amount, 0) + 320000;
+  const bankBalance = ops.filter((o) => o.account === "bank").reduce((s, o) => s + o.amount, 0) + 1480000;
+
+  const handleAdd = () => {
+    const num = parseInt(fAmount.replace(/\D/g, ""), 10);
+    if (!fName.trim() || !num) return;
+    const signed = fSign === "out" ? -Math.abs(num) : Math.abs(num);
+    setOps([{ name: fName.trim(), amount: signed, date: fDate || "—", account: fAccount }, ...ops]);
+    setFDate("");
+    setFName("");
+    setFAmount("");
+    setFAccount("cash");
+    setFSign("in");
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Шапка: дата + остатки */}
-      <div>
-        <h1 className="font-display text-3xl font-light text-foreground">Движение денег</h1>
-        <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{today}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-light text-foreground">Движение денег</h1>
+          <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{today}</p>
+        </div>
+        <Button onClick={() => setOpen(true)} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0">
+          <Icon name="Plus" size={16} className="mr-1" />
+          Добавить
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {[
-          { label: "Остаток — наличные", value: "320 000 ₽", icon: "Banknote", tint: "bg-amber-50 border-amber-200" },
-          { label: "Остаток — расчётный счёт", value: "1 480 000 ₽", icon: "Landmark", tint: "bg-stone-50 border-stone-200" },
+          { label: "Остаток — наличные", value: `${cashBalance.toLocaleString("ru-RU")} ₽`, icon: "Banknote", tint: "bg-amber-50 border-amber-200" },
+          { label: "Остаток — расчётный счёт", value: `${bankBalance.toLocaleString("ru-RU")} ₽`, icon: "Landmark", tint: "bg-stone-50 border-stone-200" },
         ].map((b, i) => (
           <div key={b.label} className={`rounded-2xl p-5 border card-hover stagger-${i + 1} animate-slide-up ${b.tint}`}>
             <div className="flex items-center justify-between">
@@ -74,31 +134,140 @@ function FinanceSection() {
         ))}
       </div>
 
-      {/* Таблица операций с видом операции */}
+      {/* Таблица операций с фильтрами */}
       <div className="bg-card rounded-2xl border border-border p-5">
-        <h2 className="font-display text-lg font-medium mb-4">Последние операции</h2>
-        <div className="space-y-3">
-          {operations.map((tx, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 ${tx.type === "in" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-                  {tx.type === "in" ? "↓" : "↑"}
-                </div>
-                <div className="min-w-0">
-                  <span className="text-sm font-body text-foreground block truncate">{tx.name}</span>
-                  <span className={`text-[10px] font-body font-medium px-1.5 py-0.5 rounded mt-0.5 inline-block ${tx.account === "cash" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
-                    {tx.account === "cash" ? "нал." : "по р/сч"}
-                  </span>
-                </div>
-              </div>
-              <div className="text-right shrink-0 ml-2">
-                <p className={`text-sm font-medium font-body ${tx.type === "in" ? "text-green-600" : "text-red-500"}`}>{tx.amount}</p>
-                <p className="text-[10px] text-muted-foreground">{tx.date}</p>
-              </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-display text-lg font-medium">Последние операции</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Фильтр по виду операции */}
+            <div className="flex bg-muted rounded-lg p-0.5">
+              {([
+                { id: "all", label: "Все" },
+                { id: "cash", label: "нал." },
+                { id: "bank", label: "по р/сч" },
+              ] as const).map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilterAccount(f.id)}
+                  className={`text-xs font-body px-2.5 py-1 rounded-md transition-colors ${
+                    filterAccount === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
             </div>
-          ))}
+            {/* Фильтр по дате */}
+            <Input
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              placeholder="гг.гг.гг"
+              className="h-8 w-28 text-xs"
+            />
+            {filterDate && (
+              <button onClick={() => setFilterDate("")} className="text-muted-foreground hover:text-foreground">
+                <Icon name="X" size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted-foreground font-body text-center py-6">Операций не найдено</p>
+          )}
+          {filtered.map((tx, i) => {
+            const isIn = tx.amount > 0;
+            return (
+              <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 ${isIn ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+                    {isIn ? "↓" : "↑"}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-body text-foreground block truncate">{tx.name}</span>
+                    <span className={`text-[10px] font-body font-medium px-1.5 py-0.5 rounded mt-0.5 inline-block ${tx.account === "cash" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
+                      {tx.account === "cash" ? "нал." : "по р/сч"}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 ml-2">
+                  <p className={`text-sm font-medium font-body ${isIn ? "text-green-600" : "text-red-500"}`}>{formatMoney(tx.amount)}</p>
+                  <p className="text-[10px] text-muted-foreground">{tx.date}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {/* Форма добавления операции */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-light">Новая операция</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* 1. Дата */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-body text-muted-foreground">Дата</Label>
+              <Input value={fDate} onChange={(e) => setFDate(e.target.value)} placeholder="гг.гг.гг (26.06.11)" />
+            </div>
+            {/* 2. Описание */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-body text-muted-foreground">Описание операции</Label>
+              <Input value={fName} onChange={(e) => setFName(e.target.value)} placeholder="Напр. Поступление — контракт" />
+            </div>
+            {/* 3. Сумма */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-body text-muted-foreground">Сумма, ₽</Label>
+              <Input value={fAmount} onChange={(e) => setFAmount(e.target.value)} placeholder="50 000" inputMode="numeric" />
+              <div className="flex gap-2 pt-1">
+                {([
+                  { id: "in", label: "Приход", cls: "text-green-600 border-green-300 bg-green-50" },
+                  { id: "out", label: "Расход", cls: "text-red-500 border-red-300 bg-red-50" },
+                ] as const).map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setFSign(s.id)}
+                    className={`flex-1 text-xs font-body py-1.5 rounded-lg border transition-all ${
+                      fSign === s.id ? s.cls : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* 4. Вид операции */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-body text-muted-foreground">Вид операции</Label>
+              <div className="flex gap-2">
+                {([
+                  { id: "cash", label: "Наличные" },
+                  { id: "bank", label: "По р/сч" },
+                ] as const).map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setFAccount(a.id)}
+                    className={`flex-1 text-sm font-body py-2 rounded-lg border transition-all ${
+                      fAccount === a.id ? "border-gold bg-amber-50 text-amber-700 font-medium" : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Отмена</Button>
+            <Button onClick={handleAdd} className="gold-gradient text-white border-0 hover:opacity-90">Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
