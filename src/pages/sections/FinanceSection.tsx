@@ -241,21 +241,17 @@ export default function FinanceSection() {
             className={`bg-card rounded-2xl p-4 border ${kpi.accent} card-hover stagger-${i + 1} animate-slide-up`}
           >
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{kpi.label}</p>
-            <p className={`font-display text-2xl font-semibold mt-1 ${kpi.color}`}>
+            <p className={`font-mono text-lg font-semibold mt-1 tabular-nums whitespace-nowrap ${kpi.color}`}>
               {kpi.total.toLocaleString("ru-RU")} ₽
             </p>
             <div className="mt-3 space-y-1 border-t border-border pt-2">
               <div className="flex items-center justify-between text-xs font-body">
                 <span className="text-muted-foreground">нал.</span>
-                <span className="text-foreground">{kpi.cash.toLocaleString("ru-RU")} ₽</span>
+                <span className="text-foreground font-mono tabular-nums whitespace-nowrap">{kpi.cash.toLocaleString("ru-RU")} ₽</span>
               </div>
               <div className="flex items-center justify-between text-xs font-body">
                 <span className="text-muted-foreground">р/сч</span>
-                <span className="text-foreground">{kpi.bank.toLocaleString("ru-RU")} ₽</span>
-              </div>
-              <div className="flex items-center justify-between text-xs font-body font-medium">
-                <span className="text-muted-foreground">всего</span>
-                <span className={kpi.color}>{kpi.total.toLocaleString("ru-RU")} ₽</span>
+                <span className="text-foreground font-mono tabular-nums whitespace-nowrap">{kpi.bank.toLocaleString("ru-RU")} ₽</span>
               </div>
             </div>
           </div>
