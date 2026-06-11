@@ -35,6 +35,13 @@ const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const pad = (n: number) => String(n).padStart(2, "0");
 const makeDate = (y: number, m: number, d: number) => `${String(y).slice(2)}.${pad(m + 1)}.${pad(d)}`;
 
+// Автоформат даты гг.мм.дд: подставляет точки по мере ввода цифр
+const formatDateInput = (raw: string) => {
+  const digits = raw.replace(/\D/g, "").slice(0, 6);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)].filter(Boolean);
+  return parts.join(".");
+};
+
 export default function CalendarSection() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [events, setEvents] = useState<CalEvent[]>([]);
@@ -298,7 +305,7 @@ export default function CalendarSection() {
           <div className="space-y-4 py-2">
             <div>
               <Label className="text-xs font-body text-muted-foreground">Дата (гг.мм.дд)</Label>
-              <Input value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} placeholder="26.06.11" className="mt-1" />
+              <Input value={form.date} onChange={(e) => setForm({ ...form, date: formatDateInput(e.target.value) })} placeholder="26.06.11" inputMode="numeric" maxLength={8} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
