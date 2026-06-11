@@ -6,7 +6,7 @@ import { UsersSection, AdsSection, CalendarSection } from "./sections/InfoSectio
 import { ProjectsSection, ChatsSection, DocsSection } from "./sections/ListSections";
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function Index() {
+export default function Index({ forceMobile = false }: { forceMobile?: boolean }) {
   const [active, setActive] = useState<Section>("finance");
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -15,6 +15,13 @@ export default function Index() {
   const secondaryNav = NAV_ITEMS.slice(4);
   const activeItem = NAV_ITEMS.find((i) => i.id === active);
   const isSecondaryActive = secondaryNav.some((i) => i.id === active);
+
+  // forceMobile — мобильный вид при любом размере экрана (для превью /app)
+  const sidebarCls = forceMobile ? "hidden" : "hidden md:flex";
+  const mobileOnlyCls = forceMobile ? "" : "md:hidden";
+  const contentPadCls = forceMobile
+    ? "flex-1 overflow-y-auto px-4 py-5 pb-28"
+    : "flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-8 pb-28 md:pb-8";
 
   const sectionMap: Record<Section, JSX.Element> = {
     finance: <FinanceSection />,
@@ -27,9 +34,9 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className={`bg-background flex ${forceMobile ? "h-full overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-60 bg-sidebar-dark min-h-screen sticky top-0 h-screen shrink-0">
+      <aside className={`${sidebarCls} flex-col w-60 bg-sidebar-dark min-h-screen sticky top-0 h-screen shrink-0`}>
         <div className="px-6 py-7 border-b border-[hsl(var(--sidebar-border))]">
           <h1 className="font-display text-2xl text-gold tracking-wide">Studio Hub</h1>
           <p className="text-[11px] text-[hsl(var(--sidebar-foreground))] opacity-40 mt-0.5 font-body">Управление студией</p>
@@ -53,7 +60,14 @@ export default function Index() {
           ))}
         </nav>
 
-        <div className="px-4 py-4 border-t border-[hsl(var(--sidebar-border))]">
+        <div className="px-4 py-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">
+          <a
+            href="/app"
+            className="flex items-center gap-2 text-xs font-body text-[hsl(var(--sidebar-foreground))] opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <Icon name="Smartphone" size={15} />
+            Вид на телефоне
+          </a>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-sm text-white font-medium shrink-0">
               А
@@ -67,9 +81,9 @@ export default function Index() {
       </aside>
 
       {/* Content */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <main className={`flex-1 flex flex-col overflow-hidden ${forceMobile ? "h-full" : "min-h-screen"}`}>
         {/* Mobile header */}
-        <header className="md:hidden bg-sidebar-dark sticky top-0 z-10 safe-top">
+        <header className={`${mobileOnlyCls} bg-sidebar-dark sticky top-0 z-10 safe-top`}>
           <div className="flex items-center justify-between px-5 py-3.5">
             <div className="flex items-center gap-2.5 min-w-0">
               {activeItem && (
@@ -86,7 +100,7 @@ export default function Index() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-8 pb-28 md:pb-8">
+        <div className={contentPadCls}>
           <div className="max-w-3xl mx-auto">
             {sectionMap[active]}
           </div>
@@ -94,7 +108,7 @@ export default function Index() {
 
         {/* Выезжающее меню «Ещё» */}
         {moreOpen && (
-          <div className="md:hidden fixed inset-0 z-30" onClick={() => setMoreOpen(false)}>
+          <div className={`${mobileOnlyCls} ${forceMobile ? "absolute" : "fixed"} inset-0 z-30`} onClick={() => setMoreOpen(false)}>
             <div className="absolute inset-0 bg-black/40 animate-fade-in" />
             <div className="absolute bottom-0 left-0 right-0 bg-sidebar-dark rounded-t-3xl p-4 pb-8 safe-bottom animate-slide-up" onClick={(e) => e.stopPropagation()}>
               <div className="w-10 h-1 rounded-full bg-[hsl(var(--sidebar-border))] mx-auto mb-4" />
@@ -123,7 +137,7 @@ export default function Index() {
         )}
 
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar-dark border-t border-[hsl(var(--sidebar-border))] z-20 safe-bottom">
+        <nav className={`${mobileOnlyCls} ${forceMobile ? "absolute" : "fixed"} bottom-0 left-0 right-0 bg-sidebar-dark border-t border-[hsl(var(--sidebar-border))] z-20 safe-bottom`}>
           <div className="flex items-stretch">
             {primaryNav.map((item) => (
               <button
