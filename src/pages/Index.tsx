@@ -1,9 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
+import type { DateRange } from "react-day-picker";
 import Icon from "@/components/ui/icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type IconName = string;
 type Account = "cash" | "bank";
@@ -39,6 +42,29 @@ function formatMoney(n: number): string {
   return `${sign}${Math.abs(n).toLocaleString("ru-RU")} ₽`;
 }
 
+// "гг.мм.дд" → Date (например "26.06.11" → 11 июня 2026)
+function parseOpDate(s: string): Date | null {
+  const m = s.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);
+  if (!m) return null;
+  return new Date(2000 + Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+// Date → "гг.мм.дд"
+function toOpDate(d: Date): string {
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yy}.${mm}.${dd}`;
+}
+
+function formatRangeLabel(range?: DateRange): string {
+  if (!range?.from) return "Выбрать период";
+  const f = range.from.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  if (!range.to) return f;
+  const t = range.to.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  return `${f} – ${t}`;
+}
+
 const OPS_STORAGE_KEY = "studiohub_operations";
 
 function loadOps(): Operation[] {
@@ -68,8 +94,8 @@ function FinanceSection() {
   // фильтры
   const [filterAccount, setFilterAccount] = useState<"all" | Account>("all");
   const [period, setPeriod] = useState<"month" | "year" | "custom">("month");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [range, setRange] = useState<DateRange | undefined>();
+  const [calOpen, setCalOpen] = useState(false);
 
   // форма
   const [fDate, setFDate] = useState("");
@@ -88,12 +114,22 @@ function FinanceSection() {
       } else if (period === "year") {
         if (!o.date.startsWith(`${curYY}.`)) return false;
       } else if (period === "custom") {
-        if (customFrom && o.date < customFrom) return false;
-        if (customTo && o.date > customTo) return false;
+        const d = parseOpDate(o.date);
+        if (!d) return false;
+        if (range?.from) {
+          const from = new Date(range.from);
+          from.setHours(0, 0, 0, 0);
+          if (d < from) return false;
+        }
+        if (range?.to) {
+          const to = new Date(range.to);
+          to.setHours(23, 59, 59, 999);
+          if (d > to) return false;
+        }
       }
       return true;
     });
-  }, [ops, filterAccount, period, customFrom, customTo, curYY, curMM]);
+  }, [ops, filterAccount, period, range, curYY, curMM]);
 
   const cashBalance = ops.filter((o) => o.account === "cash").reduce((s, o) => s + o.amount, 0) + 320000;
   const bankBalance = ops.filter((o) => o.account === "bank").reduce((s, o) => s + o.amount, 0) + 1480000;
@@ -191,7 +227,10 @@ function FinanceSection() {
               ] as const).map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => setPeriod(f.id)}
+                  onClick={() => {
+                    setPeriod(f.id);
+                    if (f.id === "custom") setCalOpen(true);
+                  }}
                   className={`text-xs font-body px-2.5 py-1 rounded-md transition-colors ${
                     period === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                   }`}
@@ -203,13 +242,55 @@ function FinanceSection() {
           </div>
         </div>
 
-        {/* Произвольный период */}
+        {/* Произвольный период — календарь + ручной ввод */}
         {period === "custom" && (
           <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in">
-            <span className="text-xs text-muted-foreground font-body">с</span>
-            <Input value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} placeholder="гг.гг.гг" className="h-8 w-28 text-xs" />
-            <span className="text-xs text-muted-foreground font-body">по</span>
-            <Input value={customTo} onChange={(e) => setCustomTo(e.target.value)} placeholder="гг.гг.гг" className="h-8 w-28 text-xs" />
+            <Popover open={calOpen} onOpenChange={setCalOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs font-body gap-1.5">
+                  <Icon name="CalendarRange" size={14} />
+                  {formatRangeLabel(range)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={range}
+                  onSelect={setRange}
+                  numberOfMonths={1}
+                  initialFocus
+                />
+                <div className="flex items-center justify-between p-2 border-t border-border">
+                  <button onClick={() => setRange(undefined)} className="text-xs text-muted-foreground font-body hover:text-foreground px-2">
+                    Сбросить
+                  </button>
+                  <Button size="sm" className="h-7 text-xs gold-gradient text-white border-0" onClick={() => setCalOpen(false)}>
+                    Готово
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <span className="text-xs text-muted-foreground font-body">или вручную:</span>
+            <Input
+              value={range?.from ? toOpDate(range.from) : ""}
+              onChange={(e) => {
+                const d = parseOpDate(e.target.value);
+                setRange((r) => ({ from: d ?? undefined, to: r?.to }));
+              }}
+              placeholder="гг.мм.дд"
+              className="h-8 w-28 text-xs"
+            />
+            <span className="text-xs text-muted-foreground font-body">—</span>
+            <Input
+              value={range?.to ? toOpDate(range.to) : ""}
+              onChange={(e) => {
+                const d = parseOpDate(e.target.value);
+                setRange((r) => ({ from: r?.from, to: d ?? undefined }));
+              }}
+              placeholder="гг.мм.дд"
+              className="h-8 w-28 text-xs"
+            />
           </div>
         )}
 
