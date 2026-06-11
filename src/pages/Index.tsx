@@ -4,6 +4,7 @@ import { type IconName, type Section, NAV_ITEMS } from "./sections/types";
 import FinanceSection from "./sections/FinanceSection";
 import { UsersSection, AdsSection, CalendarSection } from "./sections/InfoSections";
 import { ProjectsSection, ChatsSection, DocsSection } from "./sections/ListSections";
+import InstallSection from "./sections/InstallSection";
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Index({ forceMobile = false }: { forceMobile?: boolean }) {
@@ -31,6 +32,7 @@ export default function Index({ forceMobile = false }: { forceMobile?: boolean }
     projects: <ProjectsSection />,
     chats: <ChatsSection />,
     docs: <DocsSection />,
+    install: <InstallSection />,
   };
 
   return (

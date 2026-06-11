@@ -6,7 +6,7 @@ export type Operation = {
   date: string; // гг.гг.гг (например 26.06.11)
   account: Account;
 };
-export type Section = "finance" | "users" | "ads" | "calendar" | "projects" | "chats" | "docs";
+export type Section = "finance" | "users" | "ads" | "calendar" | "projects" | "chats" | "docs" | "install";
 
 export const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
   { id: "finance", label: "Движение денег", icon: "Wallet" },
@@ -16,4 +16,5 @@ export const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
   { id: "projects", label: "Проекты", icon: "Clapperboard" },
   { id: "chats", label: "Чаты", icon: "MessageSquare" },
   { id: "docs", label: "Документы", icon: "FileText" },
+  { id: "install", label: "Установка", icon: "Download" },
 ];
