@@ -192,11 +192,11 @@ export default function FinanceSection() {
       {/* Шапка: дата + остатки */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-light text-foreground">Движение денег</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-light text-foreground">Движение денег</h1>
           <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{monthName}</p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0">
-          <Icon name="Plus" size={16} className="mr-1" />
+        <Button onClick={() => setOpen(true)} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0 h-10 px-4">
+          <Icon name="Plus" size={18} className="mr-1" />
           Добавить
         </Button>
       </div>
@@ -298,7 +298,7 @@ export default function FinanceSection() {
                 <button
                   key={f.id}
                   onClick={() => setFilterAccount(f.id)}
-                  className={`text-xs font-body px-2.5 py-1 rounded-md transition-colors ${
+                  className={`text-xs font-body px-3 py-1.5 rounded-md transition-colors ${
                     filterAccount === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                   }`}
                 >
@@ -319,7 +319,7 @@ export default function FinanceSection() {
                     setPeriod(f.id);
                     if (f.id === "custom") setCalOpen(true);
                   }}
-                  className={`text-xs font-body px-2.5 py-1 rounded-md transition-colors ${
+                  className={`text-xs font-body px-3 py-1.5 rounded-md transition-colors ${
                     period === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                   }`}
                 >
