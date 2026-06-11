@@ -5,7 +5,7 @@ type IconName = string;
 type Section = "finance" | "users" | "ads" | "calendar" | "projects" | "chats" | "docs";
 
 const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
-  { id: "finance", label: "Финансы", icon: "TrendingUp" },
+  { id: "finance", label: "Движение денег", icon: "Wallet" },
   { id: "users", label: "Аудитория", icon: "Users" },
   { id: "ads", label: "Реклама", icon: "Megaphone" },
   { id: "calendar", label: "Календарь", icon: "Calendar" },
@@ -14,20 +14,46 @@ const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
   { id: "docs", label: "Документы", icon: "FileText" },
 ];
 
-// ── Finance ──────────────────────────────────────────────────────────────────
+// ── Движение денег ────────────────────────────────────────────────────────────
 function FinanceSection() {
-  const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн"];
-  const incomeData = [320, 480, 290, 560, 410, 680];
-  const expenseData = [220, 310, 190, 380, 290, 450];
-  const max = Math.max(...incomeData);
+  const today = new Date().toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const operations = [
+    { name: "Поступление — Рекламный контракт", amount: "+280 000 ₽", date: "10 июн", type: "in", account: "cash" },
+    { name: "Выплата зарплаты — команда", amount: "−140 000 ₽", date: "5 июн", type: "out", account: "bank" },
+    { name: "Поступление — Спецпроект", amount: "+120 000 ₽", date: "3 июн", type: "in", account: "bank" },
+    { name: "Производственные расходы", amount: "−48 000 ₽", date: "1 июн", type: "out", account: "cash" },
+    { name: "Инвестиции — брокерский счёт", amount: "−50 000 ₽", date: "28 май", type: "out", account: "bank" },
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Шапка: дата + остатки */}
       <div>
-        <h1 className="font-display text-3xl font-light text-foreground">Финансы</h1>
-        <p className="text-muted-foreground text-sm mt-1 font-body">Июнь 2026</p>
+        <h1 className="font-display text-3xl font-light text-foreground">Движение денег</h1>
+        <p className="text-muted-foreground text-sm mt-1 font-body capitalize">{today}</p>
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          { label: "Остаток — наличные", value: "320 000 ₽", icon: "Banknote", tint: "bg-amber-50 border-amber-200" },
+          { label: "Остаток — расчётный счёт", value: "1 480 000 ₽", icon: "Landmark", tint: "bg-stone-50 border-stone-200" },
+        ].map((b, i) => (
+          <div key={b.label} className={`rounded-2xl p-5 border card-hover stagger-${i + 1} animate-slide-up ${b.tint}`}>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{b.label}</p>
+              <Icon name={b.icon as IconName} size={18} className="text-bronze opacity-70" />
+            </div>
+            <p className="font-display text-3xl font-semibold mt-2 text-foreground">{b.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Колонки-расшифровки */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
           { label: "Доход", value: "1 840 000 ₽", delta: "+12%", up: true },
@@ -48,51 +74,24 @@ function FinanceSection() {
         ))}
       </div>
 
-      <div className="bg-card rounded-2xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-medium">Доходы и расходы</h2>
-          <div className="flex gap-4 text-xs font-body text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />Доходы</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-stone-300 inline-block" />Расходы</span>
-          </div>
-        </div>
-        <div className="flex items-end gap-2 h-36">
-          {months.map((m, i) => (
-            <div key={m} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full flex gap-0.5 items-end">
-                <div
-                  className="flex-1 rounded-t-md bg-amber-400 transition-all duration-500"
-                  style={{ height: `${(incomeData[i] / max) * 120}px` }}
-                />
-                <div
-                  className="flex-1 rounded-t-md bg-stone-300 transition-all duration-500"
-                  style={{ height: `${(expenseData[i] / max) * 120}px` }}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground font-body">{m}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
+      {/* Таблица операций с видом операции */}
       <div className="bg-card rounded-2xl border border-border p-5">
         <h2 className="font-display text-lg font-medium mb-4">Последние операции</h2>
         <div className="space-y-3">
-          {[
-            { name: "Поступление — Рекламный контракт", amount: "+280 000 ₽", date: "10 июн", type: "in" },
-            { name: "Выплата зарплаты — команда", amount: "−140 000 ₽", date: "5 июн", type: "out" },
-            { name: "Поступление — Спецпроект", amount: "+120 000 ₽", date: "3 июн", type: "in" },
-            { name: "Производственные расходы", amount: "−48 000 ₽", date: "1 июн", type: "out" },
-            { name: "Инвестиции — брокерский счёт", amount: "−50 000 ₽", date: "28 май", type: "out" },
-          ].map((tx, i) => (
+          {operations.map((tx, i) => (
             <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${tx.type === "in" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 ${tx.type === "in" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
                   {tx.type === "in" ? "↓" : "↑"}
                 </div>
-                <span className="text-sm font-body text-foreground">{tx.name}</span>
+                <div className="min-w-0">
+                  <span className="text-sm font-body text-foreground block truncate">{tx.name}</span>
+                  <span className={`text-[10px] font-body font-medium px-1.5 py-0.5 rounded mt-0.5 inline-block ${tx.account === "cash" ? "bg-amber-50 text-amber-700" : "bg-stone-100 text-stone-600"}`}>
+                    {tx.account === "cash" ? "нал." : "по р/сч"}
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0 ml-2">
                 <p className={`text-sm font-medium font-body ${tx.type === "in" ? "text-green-600" : "text-red-500"}`}>{tx.amount}</p>
                 <p className="text-[10px] text-muted-foreground">{tx.date}</p>
               </div>
