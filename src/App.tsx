@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import MobilePreview from "./pages/MobilePreview";
 import NotFound from "./pages/NotFound";
 import InstallPrompt from "./components/InstallPrompt";
+import ViewSwitcher from "./components/ViewSwitcher";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
       <Sonner />
       <InstallPrompt />
       <BrowserRouter>
+        <ViewSwitcher />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/app" element={<MobilePreview />} />

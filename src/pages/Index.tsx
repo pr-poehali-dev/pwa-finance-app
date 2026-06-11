@@ -60,14 +60,7 @@ export default function Index({ forceMobile = false }: { forceMobile?: boolean }
           ))}
         </nav>
 
-        <div className="px-4 py-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">
-          <a
-            href="/app"
-            className="flex items-center gap-2 text-xs font-body text-[hsl(var(--sidebar-foreground))] opacity-60 hover:opacity-100 transition-opacity"
-          >
-            <Icon name="Smartphone" size={15} />
-            Вид на телефоне
-          </a>
+        <div className="px-4 py-4 border-t border-[hsl(var(--sidebar-border))]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-sm text-white font-medium shrink-0">
               А
