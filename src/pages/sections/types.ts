@@ -18,7 +18,7 @@ export const EVENT_CATEGORIES: { id: EventCategory; label: string; short: string
 
 // Контрагент (справочник гостей)
 export type Contact = {
-  id: string;
+  id: number;
   fio: string;
   phone: string;
   email: string;
@@ -29,13 +29,13 @@ export type Contact = {
 
 // Событие календаря
 export type CalEvent = {
-  id: string;
+  id: number;
   date: string; // гг.мм.дд (например 26.06.11)
   timeStart: string;
   timeEnd: string;
   category: EventCategory;
   title: string;
-  guestId?: string; // для категории "В сообществе"
+  guestId?: number | null; // для категории "В сообществе"
   agreementSigned?: boolean; // подписано соглашение (ПЭП)
   approvedByGuest?: boolean; // согласовано гостем
   zoomLink?: string;

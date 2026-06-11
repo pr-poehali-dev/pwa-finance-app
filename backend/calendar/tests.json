@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Список контрагентов",
+      "method": "GET",
+      "path": "/?resource=contacts",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Список событий",
+      "method": "GET",
+      "path": "/?resource=events",
+      "expectedStatus": 200
+    },
+    {
+      "name": "CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Создание контрагента",
+      "method": "POST",
+      "path": "/?resource=contacts",
+      "body": {"fio": "Тестовый Гость", "phone": "+7 900 000-00-00", "email": "test@test.ru"},
+      "expectedStatus": 200
+    },
+    {
+      "name": "Создание события",
+      "method": "POST",
+      "path": "/?resource=events",
+      "body": {"date": "26.06.15", "timeStart": "10:00", "timeEnd": "12:00", "category": "offline", "title": "Тестовое событие"},
+      "expectedStatus": 200
+    }
+  ]
+}

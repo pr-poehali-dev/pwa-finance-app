@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
   type Contact,
   type EventCategory,
 } from "./types";
+import { createContact, createEvent, fetchContacts, fetchEvents } from "@/lib/calendarApi";
 
 const MONTHS = [
   "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
@@ -28,27 +29,26 @@ const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const pad = (n: number) => String(n).padStart(2, "0");
 const makeDate = (y: number, m: number, d: number) => `${String(y).slice(2)}.${pad(m + 1)}.${pad(d)}`;
 
-const INITIAL_CONTACTS: Contact[] = [
-  { id: "c1", fio: "Иванова Мария Сергеевна", phone: "+7 999 120-45-67", email: "maria@mail.ru", telegram: "@maria_iv", instagram: "@maria.style", contactPerson: "Агент — Ольга" },
-  { id: "c2", fio: "Петров Алексей", phone: "+7 905 333-22-11", email: "petrov@gmail.com", telegram: "@alex_p", instagram: "@alexphoto", contactPerson: "" },
-];
-
-const INITIAL_EVENTS: CalEvent[] = [
-  { id: "e1", date: "26.06.11", timeStart: "10:00", timeEnd: "14:00", category: "offline", title: "Съёмка — лукбук осень" },
-  { id: "e2", date: "26.06.12", timeStart: "15:00", timeEnd: "16:30", category: "internal", title: "Планёрка команды" },
-  { id: "e3", date: "26.06.14", timeStart: "12:00", timeEnd: "13:00", category: "community", title: "Интервью с гостем", guestId: "c1", agreementSigned: true, approvedByGuest: true },
-  { id: "e4", date: "26.06.20", timeStart: "09:00", timeEnd: "11:00", category: "online", title: "Онлайн-запись подкаста", zoomLink: "https://zoom.us/j/123456" },
-];
-
 export default function CalendarSection() {
-  const [contacts, setContacts] = useState<Contact[]>(INITIAL_CONTACTS);
-  const [events, setEvents] = useState<CalEvent[]>(INITIAL_EVENTS);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [events, setEvents] = useState<CalEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewYear, setViewYear] = useState(2026);
   const [viewMonth, setViewMonth] = useState(5); // июнь (0-индекс)
   const [filter, setFilter] = useState<EventCategory | "all">("all");
 
   const [open, setOpen] = useState(false);
   const [contactsOpen, setContactsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    Promise.all([fetchEvents(), fetchContacts()])
+      .then(([ev, ct]) => {
+        setEvents(Array.isArray(ev) ? ev : []);
+        setContacts(Array.isArray(ct) ? ct : []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   // Форма события
   const emptyForm = {
@@ -96,31 +96,35 @@ export default function CalendarSection() {
   };
 
   const catInfo = (id: EventCategory) => EVENT_CATEGORIES.find((c) => c.id === id)!;
-  const guestName = (id?: string) => contacts.find((c) => c.id === id)?.fio || "";
+  const guestName = (id?: number | null) => contacts.find((c) => c.id === id)?.fio || "";
 
   const openAdd = () => {
     setForm({ ...emptyForm, date: makeDate(viewYear, viewMonth, 1) });
     setOpen(true);
   };
 
-  const handleSave = () => {
-    if (!form.title.trim() || !form.timeStart) return;
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: `e${Date.now()}`,
-        date: form.date,
-        timeStart: form.timeStart,
-        timeEnd: form.timeEnd,
-        category: form.category,
-        title: form.title.trim(),
-        guestId: form.category === "community" ? form.guestId || undefined : undefined,
-        agreementSigned: form.category === "community" ? form.agreementSigned : undefined,
-        approvedByGuest: form.category === "community" ? form.approvedByGuest : undefined,
-        zoomLink: form.zoomLink.trim() || undefined,
-      },
-    ]);
-    setOpen(false);
+  const handleSave = async () => {
+    if (!form.title.trim() || !form.timeStart || saving) return;
+    setSaving(true);
+    const isCommunity = form.category === "community";
+    const payload: Omit<CalEvent, "id"> = {
+      date: form.date,
+      timeStart: form.timeStart,
+      timeEnd: form.timeEnd,
+      category: form.category,
+      title: form.title.trim(),
+      guestId: isCommunity && form.guestId ? Number(form.guestId) : null,
+      agreementSigned: isCommunity ? form.agreementSigned : false,
+      approvedByGuest: isCommunity ? form.approvedByGuest : false,
+      zoomLink: form.zoomLink.trim(),
+    };
+    try {
+      const id = await createEvent(payload);
+      setEvents((prev) => [...prev, { id, ...payload }]);
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -218,7 +222,10 @@ export default function CalendarSection() {
           </button>
         </div>
         <div className="space-y-3">
-          {monthEvents.length === 0 && (
+          {loading && (
+            <p className="text-sm text-muted-foreground font-body text-center py-6">Загрузка…</p>
+          )}
+          {!loading && monthEvents.length === 0 && (
             <p className="text-sm text-muted-foreground font-body text-center py-6">Событий нет</p>
           )}
           {monthEvents.map((e) => {
@@ -338,7 +345,9 @@ export default function CalendarSection() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Отмена</Button>
-            <Button onClick={handleSave} className="gold-gradient text-white border-0">Сохранить</Button>
+            <Button onClick={handleSave} disabled={saving} className="gold-gradient text-white border-0">
+              {saving ? "Сохранение…" : "Сохранить"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -369,12 +378,20 @@ function ContactsDialog({
   const empty = { fio: "", phone: "", email: "", telegram: "", instagram: "", contactPerson: "" };
   const [form, setForm] = useState(empty);
   const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const save = () => {
-    if (!form.fio.trim()) return;
-    onAdd({ id: `c${Date.now()}`, ...form, fio: form.fio.trim() });
-    setForm(empty);
-    setAdding(false);
+  const save = async () => {
+    if (!form.fio.trim() || saving) return;
+    setSaving(true);
+    const payload = { ...form, fio: form.fio.trim() };
+    try {
+      const id = await createContact(payload);
+      onAdd({ id, ...payload });
+      setForm(empty);
+      setAdding(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -442,7 +459,9 @@ function ContactsDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAdding(false)}>Назад</Button>
-              <Button onClick={save} className="gold-gradient text-white border-0">Сохранить</Button>
+              <Button onClick={save} disabled={saving} className="gold-gradient text-white border-0">
+                {saving ? "Сохранение…" : "Сохранить"}
+              </Button>
             </DialogFooter>
           </>
         )}
