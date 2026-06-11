@@ -191,9 +191,9 @@ export default function FinanceSection() {
     <div className="space-y-6 animate-fade-in">
       {/* Шапка: дата + остатки */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-baseline gap-3 flex-wrap min-w-0">
+        <div className="min-w-0">
           <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">Движение денег</h1>
-          <p className="text-muted-foreground text-sm font-body font-semibold capitalize whitespace-nowrap">{monthName}</p>
+          <p className="text-muted-foreground text-sm mt-1 font-body font-semibold capitalize">{monthName}</p>
         </div>
         <Button onClick={() => setOpen(true)} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0 h-10 px-4">
           <Icon name="Plus" size={18} className="mr-1" />
