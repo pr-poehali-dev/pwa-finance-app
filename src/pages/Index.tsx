@@ -2,7 +2,8 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { type IconName, type Section, NAV_ITEMS } from "./sections/types";
 import FinanceSection from "./sections/FinanceSection";
-import { UsersSection, AdsSection, CalendarSection } from "./sections/InfoSections";
+import { UsersSection, AdsSection } from "./sections/InfoSections";
+import CalendarSection from "./sections/CalendarSection";
 import { ProjectsSection, ChatsSection, DocsSection } from "./sections/ListSections";
 import InstallSection from "./sections/InstallSection";
 
