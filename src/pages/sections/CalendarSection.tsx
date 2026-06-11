@@ -13,6 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   EVENT_CATEGORIES,
   type CalEvent,
   type Contact,
@@ -128,7 +134,7 @@ export default function CalendarSection() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-3 sm:space-y-6 animate-fade-in">
       {/* Заголовок */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -137,10 +143,25 @@ export default function CalendarSection() {
             {MONTHS[viewMonth]} {viewYear}
           </p>
         </div>
-        <Button onClick={openAdd} className="gold-gradient text-white border-0 hover:opacity-90 shrink-0 h-10 px-4">
-          <Icon name="Plus" size={18} className="mr-1" />
-          Событие
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button onClick={openAdd} className="gold-gradient text-white border-0 hover:opacity-90 h-10 px-4">
+            <Icon name="Plus" size={18} className="mr-1" />
+            Событие
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-10 w-10 p-0">
+                <Icon name="EllipsisVertical" size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setContactsOpen(true)}>
+                <Icon name="Contact" size={15} className="mr-2" />
+                Контрагенты
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Переключатель месяца */}
@@ -155,50 +176,55 @@ export default function CalendarSection() {
       </div>
 
       {/* Фильтры */}
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-2">
         <button
           onClick={() => setFilter("all")}
-          className={`text-xs font-body px-3 py-1.5 rounded-full border transition-colors ${
+          className={`w-full sm:w-auto text-sm sm:text-xs font-body px-3 py-1.5 rounded-full border transition-colors ${
             filter === "all" ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border"
           }`}
         >
           Все
         </button>
-        {EVENT_CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setFilter(c.id)}
-            className={`text-xs font-body px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1.5 ${
-              filter === c.id ? c.style : "bg-card text-muted-foreground border-border"
-            }`}
-          >
-            <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-            {c.label}
-          </button>
-        ))}
+        <div className="grid grid-cols-2 gap-2 sm:contents">
+          {EVENT_CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setFilter(c.id)}
+              className={`text-sm sm:text-xs font-body px-3 py-1.5 rounded-full border transition-colors flex items-center justify-center sm:justify-start gap-1.5 ${
+                filter === c.id ? c.style : "bg-card text-muted-foreground border-border"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
+              {c.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Сетка месяца */}
-      <div className="bg-card rounded-2xl border border-border p-4">
-        <div className="grid grid-cols-7 mb-2">
+      <div className="bg-card rounded-2xl border border-border p-2 sm:p-4">
+        <div className="grid grid-cols-7 mb-1 sm:mb-2">
           {WEEKDAYS.map((d) => (
             <div key={d} className="text-center text-xs text-muted-foreground font-body py-1">{d}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {Array.from({ length: firstWeekday }, (_, i) => <div key={`e${i}`} />)}
           {Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1;
             const dayEvents = eventsByDay[day] || [];
+            const mainCell = dayEvents.length > 0 ? catInfo(dayEvents[0].category).cell : "";
             return (
               <div
                 key={day}
-                className="aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-num text-foreground hover:bg-muted transition-colors"
+                className={`aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-num transition-colors ${
+                  dayEvents.length > 0 ? `${mainCell} font-semibold` : "text-foreground hover:bg-muted"
+                }`}
               >
                 {day}
-                {dayEvents.length > 0 && (
+                {dayEvents.length > 1 && (
                   <div className="flex gap-0.5 mt-0.5">
-                    {dayEvents.slice(0, 3).map((e, k) => (
+                    {dayEvents.slice(1, 4).map((e, k) => (
                       <span key={k} className={`w-1 h-1 rounded-full ${catInfo(e.category).dot}`} />
                     ))}
                   </div>
@@ -211,15 +237,8 @@ export default function CalendarSection() {
 
       {/* Список событий месяца */}
       <div className="bg-card rounded-2xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <h2 className="font-display text-lg font-medium">События месяца</h2>
-          <button
-            onClick={() => setContactsOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-body text-bronze hover:opacity-80 transition-opacity"
-          >
-            <Icon name="Contact" size={15} />
-            Контрагенты
-          </button>
         </div>
         <div className="space-y-3">
           {loading && (
