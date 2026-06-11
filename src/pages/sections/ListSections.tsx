@@ -32,7 +32,7 @@ export function ProjectsSection() {
               <div>
                 <div className="flex justify-between text-xs font-body text-muted-foreground mb-1">
                   <span>Прогресс</span>
-                  <span>{p.progress}%</span>
+                  <span className="font-num">{p.progress}%</span>
                 </div>
                 <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full ${p.bar} transition-all duration-700`} style={{ width: `${p.progress}%` }} />
@@ -41,11 +41,11 @@ export function ProjectsSection() {
               <div className="flex items-center justify-between text-xs text-muted-foreground font-body">
                 <span className="flex items-center gap-1">
                   <Icon name="Calendar" size={12} />
-                  Дедлайн: {p.deadline}
+                  Дедлайн: <span className="font-num whitespace-nowrap">{p.deadline}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Icon name="Users" size={12} />
-                  {p.team} чел.
+                  <span className="font-num">{p.team}</span> чел.
                 </span>
               </div>
             </div>
@@ -89,12 +89,12 @@ export function ChatsSection() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="font-body font-medium text-sm text-foreground">{c.name}</span>
-                <span className="text-[10px] text-muted-foreground">{c.time}</span>
+                <span className="text-[10px] text-muted-foreground font-num whitespace-nowrap">{c.time}</span>
               </div>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last}</p>
             </div>
             {c.unread > 0 && (
-              <span className="w-5 h-5 rounded-full gold-gradient text-white text-[10px] flex items-center justify-center font-medium shrink-0">
+              <span className="w-5 h-5 rounded-full gold-gradient text-white text-[10px] flex items-center justify-center font-medium shrink-0 font-num">
                 {c.unread}
               </span>
             )}
@@ -135,7 +135,7 @@ export function DocsSection() {
         ].map((s, i) => (
           <div key={s.label} className={`bg-card rounded-2xl p-4 border border-border stagger-${i + 1} animate-slide-up`}>
             <Icon name={s.icon as IconName} size={18} className="text-amber-500 mb-2" />
-            <p className="font-display text-2xl font-semibold">{s.value}</p>
+            <p className="font-num text-2xl font-semibold">{s.value}</p>
             <p className="text-xs text-muted-foreground font-body mt-0.5">{s.label}</p>
           </div>
         ))}
@@ -168,7 +168,7 @@ export function DocsSection() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-body text-foreground truncate">{d.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{d.type} · {d.date}</p>
+                  <p className="text-[10px] text-muted-foreground">{d.type} · <span className="font-num whitespace-nowrap">{d.date}</span></p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-body font-medium shrink-0 ${st}`}>
                   {d.status}

@@ -24,8 +24,8 @@ export function UsersSection() {
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{s.label}</p>
               <Icon name={s.icon as IconName} size={16} className="text-amber-500 opacity-70" />
             </div>
-            <p className="font-display text-2xl font-semibold mt-2">{s.value}</p>
-            <p className="text-xs text-green-600 font-body mt-1">{s.delta}</p>
+            <p className="font-num text-2xl font-semibold mt-2 whitespace-nowrap">{s.value}</p>
+            <p className="text-xs text-green-600 font-num mt-1">{s.delta}</p>
           </div>
         ))}
       </div>
@@ -45,8 +45,8 @@ export function UsersSection() {
                 <span className="text-sm font-body">{c.title}</span>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium font-body text-foreground">{c.views}</p>
-                <p className="text-[10px] text-muted-foreground">ER {c.er}</p>
+                <p className="text-sm font-medium font-num text-foreground whitespace-nowrap">{c.views}</p>
+                <p className="text-[10px] text-muted-foreground">ER <span className="font-num">{c.er}</span></p>
               </div>
             </div>
           ))}
@@ -77,7 +77,7 @@ export function AdsSection() {
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wide leading-tight">{s.label}</p>
               <Icon name={s.icon as IconName} size={16} className="text-amber-500 opacity-70 shrink-0" />
             </div>
-            <p className="font-display text-2xl font-semibold mt-2">{s.value}</p>
+            <p className="font-num text-2xl font-semibold mt-2 whitespace-nowrap">{s.value}</p>
           </div>
         ))}
       </div>
@@ -111,7 +111,7 @@ export function AdsSection() {
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground font-body w-20 text-right">
+                  <span className="text-xs text-muted-foreground font-num w-20 text-right whitespace-nowrap">
                     {c.spent.toLocaleString("ru")} / {c.budget.toLocaleString("ru")} ₽
                   </span>
                 </div>
@@ -176,7 +176,7 @@ export function CalendarSection() {
             return (
               <div
                 key={day}
-                className={`aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-body cursor-pointer transition-colors
+                className={`aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-num cursor-pointer transition-colors
                   ${isToday ? "gold-gradient text-white font-semibold shadow-sm" : hasEvent ? "bg-amber-50 text-amber-800 border border-amber-200" : "hover:bg-muted text-foreground"}`}
               >
                 {day}
@@ -193,12 +193,12 @@ export function CalendarSection() {
           {events.map((e, i) => (
             <div key={i} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
               <div className="text-center min-w-[40px]">
-                <p className="font-display text-lg font-semibold text-amber-600">{e.date}</p>
+                <p className="font-num text-lg font-semibold text-amber-600">{e.date}</p>
                 <p className="text-[10px] text-muted-foreground">{e.day}</p>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-body">{e.title}</p>
-                <p className="text-xs text-muted-foreground">{e.time}</p>
+                <p className="text-xs text-muted-foreground font-num">{e.time}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border font-body shrink-0 ${typeStyle[e.type]}`}>
                 {typeLabel[e.type]}

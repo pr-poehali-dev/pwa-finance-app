@@ -211,7 +211,7 @@ export default function FinanceSection() {
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{b.label}</p>
               <Icon name={b.icon as IconName} size={18} className="text-bronze opacity-70" />
             </div>
-            <p className="font-display text-3xl font-semibold mt-2 text-foreground">{b.value}</p>
+            <p className="font-num text-2xl font-semibold mt-2 text-foreground whitespace-nowrap">{b.value}</p>
           </div>
         ))}
       </div>
@@ -241,30 +241,21 @@ export default function FinanceSection() {
             className={`bg-card rounded-2xl p-4 border ${kpi.accent} card-hover stagger-${i + 1} animate-slide-up`}
           >
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{kpi.label}</p>
-            <p className={`font-mono text-lg font-semibold mt-1 tabular-nums whitespace-nowrap ${kpi.color}`}>
+            <p className={`font-num text-lg font-semibold mt-1 whitespace-nowrap ${kpi.color}`}>
               {kpi.total.toLocaleString("ru-RU")} ₽
             </p>
             <div className="mt-3 space-y-1 border-t border-border pt-2">
               <div className="flex items-center justify-between text-xs font-body">
                 <span className="text-muted-foreground">нал.</span>
-                <span className="text-foreground font-mono tabular-nums whitespace-nowrap">{kpi.cash.toLocaleString("ru-RU")} ₽</span>
+                <span className="text-foreground font-num whitespace-nowrap">{kpi.cash.toLocaleString("ru-RU")} ₽</span>
               </div>
               <div className="flex items-center justify-between text-xs font-body">
                 <span className="text-muted-foreground">р/сч</span>
-                <span className="text-foreground font-mono tabular-nums whitespace-nowrap">{kpi.bank.toLocaleString("ru-RU")} ₽</span>
+                <span className="text-foreground font-num whitespace-nowrap">{kpi.bank.toLocaleString("ru-RU")} ₽</span>
               </div>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Итого за период */}
-      <div className="bg-card rounded-2xl border border-border p-4 flex items-center justify-between animate-fade-in">
-        <span className="font-body font-medium text-sm text-foreground uppercase tracking-wide">Итого</span>
-        <span className={`font-display text-2xl font-semibold ${incomeTotal - expenseTotal >= 0 ? "text-green-600" : "text-red-500"}`}>
-          {incomeTotal - expenseTotal >= 0 ? "+" : "−"}
-          {Math.abs(incomeTotal - expenseTotal).toLocaleString("ru-RU")} ₽
-        </span>
       </div>
 
       {/* Таблица операций с фильтрами */}
@@ -398,8 +389,8 @@ export default function FinanceSection() {
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className={`text-sm font-medium font-body ${isIn ? "text-green-600" : "text-red-500"}`}>{formatMoney(tx.amount)}</p>
-                  <p className="text-[10px] text-muted-foreground">{tx.date}</p>
+                  <p className={`text-sm font-medium font-num whitespace-nowrap ${isIn ? "text-green-600" : "text-red-500"}`}>{formatMoney(tx.amount)}</p>
+                  <p className="text-[10px] text-muted-foreground font-num">{tx.date}</p>
                 </div>
               </div>
             );

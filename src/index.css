@@ -88,6 +88,14 @@
     font-family: "Golos Text", sans-serif;
   }
 
+  /* Единый шрифт для цифр — чистый, ноль без перечёркивания */
+  .font-num {
+    font-family: Arial, Helvetica, "Helvetica Neue", sans-serif;
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
   .text-gold {
     color: hsl(var(--gold));
   }
