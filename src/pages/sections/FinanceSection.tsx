@@ -85,15 +85,14 @@ export default function FinanceSection() {
   const [fAccount, setFAccount] = useState<Account>("cash");
   const [fSign, setFSign] = useState<"in" | "out">("in");
 
-  const filtered = useMemo(() => {
-    return ops.filter((o) => {
-      if (filterAccount !== "all" && o.account !== filterAccount) return false;
+  // проверка операции на попадание в выбранный период
+  const inPeriod = useMemo(() => {
+    return (o: Operation): boolean => {
       if (o.date === "—") return true;
-
       if (period === "month") {
-        if (!o.date.startsWith(`${curYY}.${curMM}`)) return false;
+        return o.date.startsWith(`${curYY}.${curMM}`);
       } else if (period === "year") {
-        if (!o.date.startsWith(`${curYY}.`)) return false;
+        return o.date.startsWith(`${curYY}.`);
       } else if (period === "custom") {
         const d = parseOpDate(o.date);
         if (!d) return false;
@@ -109,8 +108,38 @@ export default function FinanceSection() {
         }
       }
       return true;
+    };
+  }, [period, range, curYY, curMM]);
+
+  const filtered = useMemo(() => {
+    return ops.filter((o) => {
+      if (filterAccount !== "all" && o.account !== filterAccount) return false;
+      return inPeriod(o);
     });
-  }, [ops, filterAccount, period, range, curYY, curMM]);
+  }, [ops, filterAccount, inPeriod]);
+
+  // Итоги за период (без учёта фильтра по виду операции)
+  const totals = useMemo(() => {
+    const t = {
+      incomeCash: 0,
+      incomeBank: 0,
+      expenseCash: 0,
+      expenseBank: 0,
+    };
+    ops.filter(inPeriod).forEach((o) => {
+      if (o.amount > 0) {
+        if (o.account === "cash") t.incomeCash += o.amount;
+        else t.incomeBank += o.amount;
+      } else if (o.amount < 0) {
+        if (o.account === "cash") t.expenseCash += Math.abs(o.amount);
+        else t.expenseBank += Math.abs(o.amount);
+      }
+    });
+    return t;
+  }, [ops, inPeriod]);
+
+  const incomeTotal = totals.incomeCash + totals.incomeBank;
+  const expenseTotal = totals.expenseCash + totals.expenseBank;
 
   const cashBalance = ops.filter((o) => o.account === "cash").reduce((s, o) => s + o.amount, 0) + 320000;
   const bankBalance = ops.filter((o) => o.account === "bank").reduce((s, o) => s + o.amount, 0) + 1480000;
@@ -157,23 +186,59 @@ export default function FinanceSection() {
         ))}
       </div>
 
-      {/* Колонки-расшифровки */}
+      {/* Колонки-расшифровки за выбранный период */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: "Доход", value: "1 840 000 ₽", delta: "+12%", up: true },
-          { label: "Расходы", value: "940 000 ₽", delta: "−4%", up: false },
+          {
+            label: "Доход",
+            cash: totals.incomeCash,
+            bank: totals.incomeBank,
+            total: incomeTotal,
+            color: "text-green-600",
+            accent: "border-green-200",
+          },
+          {
+            label: "Расходы",
+            cash: totals.expenseCash,
+            bank: totals.expenseBank,
+            total: expenseTotal,
+            color: "text-red-500",
+            accent: "border-red-200",
+          },
         ].map((kpi, i) => (
           <div
             key={kpi.label}
-            className={`bg-card rounded-2xl p-4 border border-border card-hover stagger-${i + 1} animate-slide-up`}
+            className={`bg-card rounded-2xl p-4 border ${kpi.accent} card-hover stagger-${i + 1} animate-slide-up`}
           >
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wide">{kpi.label}</p>
-            <p className="font-display text-xl font-semibold mt-1 text-foreground">{kpi.value}</p>
-            <span className={`text-xs font-body font-medium ${kpi.up ? "text-green-600" : "text-red-500"}`}>
-              {kpi.delta}
-            </span>
+            <p className={`font-display text-2xl font-semibold mt-1 ${kpi.color}`}>
+              {kpi.total.toLocaleString("ru-RU")} ₽
+            </p>
+            <div className="mt-3 space-y-1 border-t border-border pt-2">
+              <div className="flex items-center justify-between text-xs font-body">
+                <span className="text-muted-foreground">нал.</span>
+                <span className="text-foreground">{kpi.cash.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-body">
+                <span className="text-muted-foreground">р/сч</span>
+                <span className="text-foreground">{kpi.bank.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-body font-medium">
+                <span className="text-muted-foreground">всего</span>
+                <span className={kpi.color}>{kpi.total.toLocaleString("ru-RU")} ₽</span>
+              </div>
+            </div>
           </div>
         ))}
+      </div>
+
+      {/* Итого за период */}
+      <div className="bg-card rounded-2xl border border-border p-4 flex items-center justify-between animate-fade-in">
+        <span className="font-body font-medium text-sm text-foreground uppercase tracking-wide">Итого</span>
+        <span className={`font-display text-2xl font-semibold ${incomeTotal - expenseTotal >= 0 ? "text-green-600" : "text-red-500"}`}>
+          {incomeTotal - expenseTotal >= 0 ? "+" : "−"}
+          {Math.abs(incomeTotal - expenseTotal).toLocaleString("ru-RU")} ₽
+        </span>
       </div>
 
       {/* Таблица операций с фильтрами */}
