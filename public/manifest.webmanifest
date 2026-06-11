@@ -1,0 +1,32 @@
+{
+  "name": "Studio Hub — управление студией",
+  "short_name": "Studio Hub",
+  "description": "Управление финансами, командой и проектами студии",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/b2b0b379-8b77-4ab9-92d5-3a1e9c1b74df/files/9aaf0207-44cb-43ec-9ab8-c9083a202620.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn.poehali.dev/projects/b2b0b379-8b77-4ab9-92d5-3a1e9c1b74df/files/9aaf0207-44cb-43ec-9ab8-c9083a202620.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn.poehali.dev/projects/b2b0b379-8b77-4ab9-92d5-3a1e9c1b74df/files/9aaf0207-44cb-43ec-9ab8-c9083a202620.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}
