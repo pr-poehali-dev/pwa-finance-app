@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,18 @@ function formatMoney(n: number): string {
   return `${sign}${Math.abs(n).toLocaleString("ru-RU")} ₽`;
 }
 
+const OPS_STORAGE_KEY = "studiohub_operations";
+
+function loadOps(): Operation[] {
+  try {
+    const raw = localStorage.getItem(OPS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as Operation[];
+  } catch {
+    /* ignore */
+  }
+  return INITIAL_OPS;
+}
+
 function FinanceSection() {
   const today = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
@@ -46,7 +58,11 @@ function FinanceSection() {
     year: "numeric",
   });
 
-  const [ops, setOps] = useState<Operation[]>(INITIAL_OPS);
+  const [ops, setOps] = useState<Operation[]>(loadOps);
+
+  useEffect(() => {
+    localStorage.setItem(OPS_STORAGE_KEY, JSON.stringify(ops));
+  }, [ops]);
   const [open, setOpen] = useState(false);
 
   // фильтры
